@@ -1,0 +1,58 @@
+Metadata-Version: 2.4
+Name: holo-hanafuda-assistant
+Version: 0.1.0
+Summary: Python assistant library/CLI for Hanafuda (Koi-Koi, Oicho-Kabu) with best-move suggestions.
+Author: Holo Hanafuda Assistant contributors
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
+# Holo Hanafuda Assistant (Python)
+
+Koi-Koi / Oicho-Kabu 支援ライブラリ & CLI。  
+- **最善手**のヒューリスティック提案
+- **最高役**を狙うための推奨手
+- **現在役の成立判定**
+- **相手の次の行動予測（簡易）**
+- **こいこい** / **おいちょかぶ** / **（暫定）ホロあわせ ルール設定**
+
+> 注意: オーバーレイ等の画面表示はゲームの規約に反する可能性があります。自己責任で。基本は別ウィンドウ/CLI利用を推奨。
+
+## Install (local)
+```bash
+pip install -e .
+```
+
+## CLI
+### 最善手候補の表示
+```bash
+hanafuda suggest examples/sample_state.json
+```
+
+### 現在役の判定
+```bash
+hanafuda eval-yaku examples/sample_state.json
+```
+
+### おいちょかぶの手札評価
+```bash
+hanafuda kabu 9 1 3
+```
+
+## JSON フォーマット（Koi-Koi）
+```json
+{
+  "hand": ["1:bright", "3:tan-red", "8:tane", "8:kasu"],
+  "field": ["1:kasu", "3:kasu", "8:kasu", "8:tan-blue"],
+  "captured_self": [],
+  "captured_opp": [],
+  "month_known_remaining": {},
+  "config": {"variant": "holo"}
+}
+```
+- 形式: `<month>:<kind>`  
+  - kind = `bright|tane|tan|tan-red|tan-blue|kasu|rain|sake|boar|deer|butterfly|moon|cherry` など（内部で正規化）
+
+## ライセンス
+MIT

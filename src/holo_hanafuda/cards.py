@@ -14,7 +14,6 @@ class Card:
 # Build standard Hanafuda 48-card set (simplified tags)
 def _build_cards() -> List[Card]:
     C: List[Card] = []
-    # Data derived from common Koi-Koi sets (simplified); adjust as needed per variant.
     # Month mapping: 1 Matsu,2 Ume,3 Sakura,4 Fuji,5 Ayame,6 Botan,7 Hagi,8 Susuki,9 Kiku,10 Momiji,11 Yanagi,12 Kiri
     # Brights
     C += [Card(1,"bright","crane"), Card(3,"bright","cherry"), Card(8,"bright","moon"),
@@ -33,21 +32,20 @@ def _build_cards() -> List[Card]:
             C.append(Card(m,"ribbon","blue"))
         else:
             C.append(Card(m,"ribbon","plain"))
-    # Kasu (2 per month except those already filled; total should be 48)
-    # We already added: 5 brights, 8 animals, 12 ribbons => 25 cards. Need 23 kasu.
-    # Standard has: months with only kasu/ribbon get 2 kasu; months with animal have 1 kasu; months with bright may still have kasu.
-    kasu_counts: Dict[int, int] = {m:2 for m in range(1,13)}
+
+    # --- FIX: fill each month up to 4 cards with kasu ---
+    from collections import defaultdict
+    count = defaultdict(int)
     for c in C:
-        # subtract one slot per non-kasu already placed this month; each month has 4 cards total
-        kasu_counts[c.month] -= 1
+        count[c.month] += 1
     for m in range(1,13):
-        for _ in range(max(0, kasu_counts[m])):
-            C.append(Card(m,"kasu",""))
+        remaining = 4 - count[m]
+        for _ in range(remaining):
+            C.append(Card(m, "kasu", ""))
+
     assert len(C) == 48, f"Deck size mismatch: {len(C)}"
     return sorted(C)
 
-ALL_CARDS: List[Card] = _build_cards()
-CARD_INDEX = {c.key(): c for c in ALL_CARDS}
 
 def parse_card(token: str) -> Card:
     """Parse '<month>:<kind[-tag]>' into Card (for external JSON)."""

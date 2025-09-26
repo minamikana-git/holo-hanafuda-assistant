@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/holo_hanafuda/__init__.py
+src/holo_hanafuda/cards.py
+src/holo_hanafuda/cli.py
+src/holo_hanafuda/koikoi_rules.py
+src/holo_hanafuda/koikoi_strategy.py
+src/holo_hanafuda/oicho_kabu.py
+src/holo_hanafuda/state.py
+src/holo_hanafuda_assistant.egg-info/PKG-INFO
+src/holo_hanafuda_assistant.egg-info/SOURCES.txt
+src/holo_hanafuda_assistant.egg-info/dependency_links.txt
+src/holo_hanafuda_assistant.egg-info/entry_points.txt
+src/holo_hanafuda_assistant.egg-info/top_level.txt
