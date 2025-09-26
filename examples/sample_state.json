@@ -1,0 +1,19 @@
+{
+  "hand": [
+    "1:bright",
+    "3:ribbon-red",
+    "8:animal-geese",
+    "8:kasu"
+  ],
+  "field": [
+    "1:kasu",
+    "3:kasu",
+    "8:kasu",
+    "8:ribbon-blue"
+  ],
+  "captured_self": [],
+  "captured_opp": [],
+  "config": {
+    "variant": "holo"
+  }
+}

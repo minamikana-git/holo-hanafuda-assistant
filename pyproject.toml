@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "holo-hanafuda-assistant"
+version = "0.1.0"
+description = "Python assistant library/CLI for Hanafuda (Koi-Koi, Oicho-Kabu) with best-move suggestions."
+authors = [{name="Holo Hanafuda Assistant contributors"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+hanafuda = "holo_hanafuda.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
