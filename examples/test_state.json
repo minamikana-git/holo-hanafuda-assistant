@@ -1,0 +1,31 @@
+{
+  "hand": ["1:kasu", "2:kasu", "3:kasu", "4:kasu", "5:kasu"],
+  "field": [],
+  "captured_self": [
+    "1:bright-crane",
+    "3:bright-cherry",
+    "8:bright-moon",
+    "11:bright-rain",
+    "12:bright-phoenix",
+    "2:animal-nightingale",
+    "4:animal-cuckoo",
+    "5:animal-bridge",
+    "6:animal-butterfly",
+    "7:animal-boar",
+    "9:animal-sake",
+    "10:animal-deer",
+    "1:ribbon-poetry-red",
+    "2:ribbon-poetry-red",
+    "3:ribbon-poetry-red",
+    "6:ribbon-blue",
+    "9:ribbon-blue",
+    "10:ribbon-blue",
+    "8:animal-geese",
+    "9:kasu",
+    "9:kasu",
+    "9:kasu",
+    "9:animal-sake"
+  ],
+  "captured_opp": [],
+  "config": {"variant": "holo"}
+}
