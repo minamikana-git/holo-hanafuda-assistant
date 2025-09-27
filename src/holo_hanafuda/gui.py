@@ -187,8 +187,11 @@ class HanafudaGUI(QWidget):
 
             moves = suggest_best_moves(gs.hand, gs.field, gs.captured_self, gs.captured_opp)
             hints = suggest_highest_yaku_line(gs.hand, gs.field, gs.captured_self)
-            yaku = evaluate_yaku(gs.captured_self)
-            total = yaku_points(gs.captured_self)
+            
+            # 役判定（CLIと同じロジック）
+            from .koikoi_rules import evaluate_yaku, yaku_points
+            yaku = evaluate_yaku(gs.captured_self, variant="holo", initial_hand=gs.hand)
+            total = yaku_points(gs.captured_self, variant="holo", initial_hand=gs.hand)
 
             lines: List[str] = []
             lines.append("=== 最善手候補 ===")
