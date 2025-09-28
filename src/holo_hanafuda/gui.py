@@ -20,12 +20,23 @@ from .koikoi_rules import evaluate_yaku, yaku_points
 MONTHS = [str(i) for i in range(1, 13)]
 KINDS = ["bright", "animal", "ribbon", "kasu"]
 
-TAG_OPTIONS = {
-    "bright": ["", "crane", "cherry", "moon", "rain", "phoenix"],
-    "animal": ["", "nightingale", "cuckoo", "bridge", "butterfly", "boar", "geese", "sake", "deer"],
-    "ribbon": ["", "poetry-red", "blue", "plain"],
-    "kasu": [""],
-}
+def build_tag_options():
+    from collections import defaultdict
+    tags = defaultdict(set)
+    for c in ALL_CARDS:
+        if c.kind == "kasu":
+            continue
+        if c.tag:
+            tags[c.kind].add(c.tag)
+    return {
+        "bright": [""] + sorted(tags.get("bright", [])),
+        "animal": [""] + sorted(tags.get("animal", [])),
+        "ribbon": [""] + sorted(tags.get("ribbon", [])),
+        "kasu": [""],
+    }
+
+TAG_OPTIONS = build_tag_options()
+
 
 def token_from_selection(month: str, kind: str, tag: str) -> str:
     """<month>:<kind[-tag]> 形式のトークン文字列を作る"""
@@ -226,25 +237,21 @@ class HanafudaGUI(QWidget):
             QMessageBox.critical(self, "エラー", f"解析中にエラーが発生しました:\n{e}")
             raise
 
-        def build_tag_options():
-            from collections import defaultdict
-            tags = defaultdict(set)
-            for c in ALL_CARDS:
-                if c.kind =="kasu":
-                    continue
+    def build_tag_options():
+        from collections import defaultdict
+        tags = defaultdict(set)
+        for c in ALL_CARDS:
+         if c.kind == "kasu":
+            continue
+        tags[c.kind].add(c.tag) if c.tag else None
+        return {
+        "bright": [""] + sorted(tags.get("bright", [])),
+        "animal": [""] + sorted(tags.get("animal", [])),
+        "ribbon": [""] + sorted(tags.get("ribbon", [])),
+        "kasu": [""],
+    }
 
-                if c.tag:
-                    tags[c.kind].add(c.tag)
-
-                opts = {
-                    "bright": [""] + sorted(tags.get("bright", [])),
-                    "animal": [""] + sorted(tags.get("animal", [])),
-                    "ribbon": [""] + sorted(tags.get("ribbon", [])),
-                    "kasu": [""],
-                }
-            return opts
-        TAG_OPTIONS = build_tag_options()
-
+# アプリ起動        
 
 def main():
     app = QApplication(sys.argv)
