@@ -2,13 +2,12 @@ import sys
 import json
 import psutil
 from typing import List
-
+from .cards import ALL_CARDS
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QComboBox, QListWidget, QListWidgetItem, QTextEdit, QMessageBox, QGroupBox
 )
-
 from .state import GameState
 from .koikoi_strategy import suggest_best_moves, suggest_highest_yaku_line
 from .koikoi_rules import evaluate_yaku, yaku_points
@@ -226,6 +225,25 @@ class HanafudaGUI(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "エラー", f"解析中にエラーが発生しました:\n{e}")
             raise
+
+        def build_tag_options():
+            from collections import defaultdict
+            tags = defaultdict(set)
+            for c in ALL_CARDS:
+                if c.kind =="kasu":
+                    continue
+
+                if c.tag:
+                    tags[c.kind].add(c.tag)
+
+                opts = {
+                    "bright": [""] + sorted(tags.get("bright", [])),
+                    "animal": [""] + sorted(tags.get("animal", [])),
+                    "ribbon": [""] + sorted(tags.get("ribbon", [])),
+                    "kasu": [""],
+                }
+            return opts
+        TAG_OPTIONS = build_tag_options()
 
 
 def main():
