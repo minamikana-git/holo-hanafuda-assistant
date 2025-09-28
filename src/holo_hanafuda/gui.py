@@ -121,12 +121,15 @@ class HanafudaGUI(QWidget):
         ops.addWidget(self.btn_clear)
         ops.addStretch()
         root.addLayout(ops)
+       # __init__ の「操作ボタン」付近に追記
         self.btn_read_hand = QPushButton("手札を画面から取得")
         self.btn_read_field = QPushButton("場札を画面から取得")
-        root.addWidget(self.btn_read_hand)
-        root.addWidget(self.btn_read_field)
+        ops.addWidget(self.btn_read_hand)
+        ops.addWidget(self.btn_read_field)
+
         self.btn_read_hand.clicked.connect(lambda: self._read_from_screen(self.lst_hand["list"]))
         self.btn_read_field.clicked.connect(lambda: self._read_from_screen(self.lst_field["list"]))
+
 
         # --- 結果表示 ---
         root.addWidget(QLabel("解析結果"))
@@ -298,6 +301,44 @@ class RegionPicker(QWidget):
             p.setPen(pen)
             r = QRect(self.origin, self.current)
             p.drawRect(r.normalized())
+
+            
+    # gui.py のクラス内にメソッド追加
+    def _pick_region(self) -> tuple[int, int, int, int] | None:
+        picker = RegionPicker()
+        picker.show()
+        picker.raise_()
+        picker.activateWindow()
+        # ブロッキング風に簡易待機
+        app = QApplication.instance()
+        while picker.isVisible():
+            app.processEvents()
+        if picker.result_rect and picker.result_rect.width() > 10 and picker.result_rect.height() > 10:
+            r = picker.result_rect
+            return (r.left(), r.top(), r.width(), r.height())
+        return None
+
+    def _read_from_screen(self, target_list: QListWidget):
+        tmps = load_templates()  # assets/templates から自動読み込み
+        if not tmps:
+            QMessageBox.warning(self, "テンプレ未準備", "assets/templates/*.png が見つかりません。テンプレ画像を配置してください。")
+            return
+
+        region = self._pick_region()
+        if region is None:
+            return  # キャンセル
+
+        scene = grab_screen(region)
+        dets = match_templates(scene, tmps, threshold=0.88, scales=(1.0, 0.9, 1.1))
+
+        if not dets:
+            QMessageBox.information(self, "結果", "一致する札は見つかりませんでした。")
+            return
+
+        # マッチした token を追加
+        for d in dets:
+            target_list.addItem(QListWidgetItem(d.token))
+        QMessageBox.information(self, "結果", f"{len(dets)} 枚の札を追加しました。")
 
 # アプリ起動
 def main():
