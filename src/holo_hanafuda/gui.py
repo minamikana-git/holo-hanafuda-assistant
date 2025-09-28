@@ -1,17 +1,19 @@
 import sys
 import json
 import psutil
+from PySide6.QtGui import QPainter, QPen, QColor, QMouseEvent
+from PySide6.QtCore import QRect
 from typing import List
-from .cards import ALL_CARDS
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QComboBox, QListWidget, QListWidgetItem, QTextEdit, QMessageBox, QGroupBox
 )
+from .vision import load_templates, grab_screen, match_templates
+from .cards import ALL_CARDS
 from .state import GameState
 from .koikoi_strategy import suggest_best_moves, suggest_highest_yaku_line
 from .koikoi_rules import evaluate_yaku, yaku_points
-
 
 # ------------------------------
 # ユーティリティ
@@ -37,7 +39,6 @@ def build_tag_options():
 
 TAG_OPTIONS = build_tag_options()
 
-
 def token_from_selection(month: str, kind: str, tag: str) -> str:
     """<month>:<kind[-tag]> 形式のトークン文字列を作る"""
     return f"{month}:{kind}" + (f"-{tag}" if tag else "")
@@ -49,7 +50,6 @@ def ensure_game_running_or_quit(parent: QWidget | None = None):
             return
     QMessageBox.critical(parent, "エラー", "HolosHanafuda.exe が起動していません。\nゲームを起動してから再実行してください。")
     sys.exit(1)
-
 
 # ------------------------------
 # メインウィンドウ
@@ -121,6 +121,12 @@ class HanafudaGUI(QWidget):
         ops.addWidget(self.btn_clear)
         ops.addStretch()
         root.addLayout(ops)
+        self.btn_read_hand = QPushButton("手札を画面から取得")
+        self.btn_read_field = QPushButton("場札を画面から取得")
+        root.addWidget(self.btn_read_hand)
+        root.addWidget(self.btn_read_field)
+        self.btn_read_hand.clicked.connect(lambda: self._read_from_screen(self.lst_hand["list"]))
+        self.btn_read_field.clicked.connect(lambda: self._read_from_screen(self.lst_field["list"]))
 
         # --- 結果表示 ---
         root.addWidget(QLabel("解析結果"))
@@ -197,9 +203,8 @@ class HanafudaGUI(QWidget):
 
             moves = suggest_best_moves(gs.hand, gs.field, gs.captured_self, gs.captured_opp)
             hints = suggest_highest_yaku_line(gs.hand, gs.field, gs.captured_self)
-            
+
             # 役判定（CLIと同じロジック）
-            from .koikoi_rules import evaluate_yaku, yaku_points
             yaku = evaluate_yaku(gs.captured_self, variant="holo", initial_hand=gs.hand)
             total = yaku_points(gs.captured_self, variant="holo", initial_hand=gs.hand)
 
@@ -237,22 +242,64 @@ class HanafudaGUI(QWidget):
             QMessageBox.critical(self, "エラー", f"解析中にエラーが発生しました:\n{e}")
             raise
 
-    def build_tag_options():
-        from collections import defaultdict
-        tags = defaultdict(set)
-        for c in ALL_CARDS:
-         if c.kind == "kasu":
-            continue
-        tags[c.kind].add(c.tag) if c.tag else None
-        return {
-        "bright": [""] + sorted(tags.get("bright", [])),
-        "animal": [""] + sorted(tags.get("animal", [])),
-        "ribbon": [""] + sorted(tags.get("ribbon", [])),
-        "kasu": [""],
-    }
+    # --- 画面からのカード読み取り ---
 
-# アプリ起動        
+    def _read_from_screen(self, target_list: QListWidget):
+        tmps = load_templates()
+        if not tmps:
+            QMessageBox.warning(self, "テンプレ未準備", "assets/templates/*.png が見つかりません。")
+            return
+        scene = grab_screen(None)  # 全画面キャプチャ
+        dets = match_templates(scene, tmps, threshold=0.88)
+        if not dets:
+            QMessageBox.information(self, "結果", "一致する札は見つかりませんでした。")
+            return
+        added = 0
+        for d in dets:
+            target_list.addItem(QListWidgetItem(d.token))
+            added += 1
+        QMessageBox.information(self, "結果", f"{added} 枚の札を追加しました。")
 
+class RegionPicker(QWidget):
+    """画面全体を覆い、ドラッグで矩形選択して QRect(left, top, w, h) を返す簡易ピッカー"""
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+        self.setWindowState(Qt.WindowFullScreen)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.origin = None
+        self.current = None
+        self.result_rect = None
+
+    def mousePressEvent(self, e: QMouseEvent):
+        self.origin = e.globalPosition().toPoint()
+        self.current = self.origin
+        self.update()
+
+    def mouseMoveEvent(self, e: QMouseEvent):
+        if self.origin:
+            self.current = e.globalPosition().toPoint()
+            self.update()
+
+    def mouseReleaseEvent(self, e: QMouseEvent):
+        if self.origin and self.current:
+            x1, y1 = self.origin.x(), self.origin.y()
+            x2, y2 = self.current.x(), self.current.y()
+            left, top = min(x1, x2), min(y1, y2)
+            w, h = abs(x2 - x1), abs(y2 - y1)
+            self.result_rect = QRect(left, top, w, h)
+        self.close()
+
+    def paintEvent(self, _):
+        if self.origin and self.current:
+            p = QPainter(self)
+            p.fillRect(self.rect(), QColor(0, 0, 0, 80))
+            pen = QPen(QColor(0, 200, 255), 2, Qt.SolidLine)
+            p.setPen(pen)
+            r = QRect(self.origin, self.current)
+            p.drawRect(r.normalized())
+
+# アプリ起動
 def main():
     app = QApplication(sys.argv)
     w = HanafudaGUI()
@@ -260,7 +307,5 @@ def main():
     w.show()
     sys.exit(app.exec())
 
-
 if __name__ == "__main__":
     main()
-# ------------------------------
